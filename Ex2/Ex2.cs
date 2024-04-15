@@ -2,84 +2,87 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-class MainClass
+class Program
 {
     static List<string> morseAlphabet = new List<string>
     {
-        ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..",
-        "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
+        ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---",
+        ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
     };
 
-    static string ToMorseCode(string word)
+    static Dictionary<char, string> charToMorse = new Dictionary<char, string>();
+
+    static void InitCharToMorseMap()
     {
-        string morseWord = "";
-
-        foreach (char c in word)
+        for (char c = 'a'; c <= 'z'; ++c)
         {
-            int index = c - 'a';
-            morseWord += morseAlphabet[index];
+            charToMorse[c] = morseAlphabet[c - 'a'];
         }
-
-        return morseWord;
     }
 
-    static bool CompareMorseWords(string word1, string word2)
+    static void GeneratePermutations(string str, int l, int r, HashSet<string> permutations)
     {
-        if (word1.Length != word2.Length)
+        if (l == r)
         {
-            return false;
+            permutations.Add(str);
         }
-
-        string sortedWord1 = new string(word1.OrderBy(c => c).ToArray());
-        string sortedWord2 = new string(word2.OrderBy(c => c).ToArray());
-
-        return sortedWord1 == sortedWord2;
+        else
+        {
+            for (int i = l; i <= r; i++)
+            {
+                str = Swap(str, l, i);
+                GeneratePermutations(str, l + 1, r, permutations);
+                str = Swap(str, l, i);
+            }
+        }
     }
 
-    static int CountMatchingMorseWords(List<string> words)
+    static string Swap(string str, int i, int j)
     {
-        int count = 0;
+        char[] charArray = str.ToCharArray();
+        char temp = charArray[i];
+        charArray[i] = charArray[j];
+        charArray[j] = temp;
+        return new string(charArray);
+    }
 
-        List<string> morseWords = new List<string>();
+    static string StringToMorse(string str)
+    {
+        string morseString = "";
+        foreach (char c in str)
+        {
+            morseString += charToMorse[c];
+        }
+        return morseString;
+    }
+
+    static void Main(string[] args)
+    {
+        InitCharToMorseMap();
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+        Console.WriteLine("Введите слова для перестановки (разделяйте их пробелами): ");
+        string input = Console.ReadLine();
+
+        string[] words = input.Split(' ');
+        HashSet<string> uniqueMorseWords = new HashSet<string>();
+
         foreach (string word in words)
         {
-            morseWords.Add(ToMorseCode(word));
-        }
+            HashSet<string> permutations = new HashSet<string>();
+            GeneratePermutations(word, 0, word.Length - 1, permutations);
 
-        for (int i = 0; i < morseWords.Count; ++i)
-        {
-            for (int j = i + 1; j < morseWords.Count; ++j)
+            foreach (string permutation in permutations)
             {
-                if (CompareMorseWords(morseWords[i], morseWords[j]))
-                {
-                    count++;
-                }
+                uniqueMorseWords.Add(StringToMorse(permutation));
             }
         }
 
-        return count;
-    }
-
-    public static void Main(string[] args)
-    {
-        Console.Write("Enter the number of words: ");
-        int n = Convert.ToInt32(Console.ReadLine());
-
-        List<string> input = new List<string>();
-        Console.Write("Enter the words: ");
-        for (int i = 0; i < n; ++i)
+        Console.WriteLine("Уникальные слова в языке Морзе: ");
+        foreach (string morseWord in uniqueMorseWords)
         {
-            string word = Console.ReadLine();
-            input.Add(word);
+            Console.WriteLine(morseWord);
         }
 
-        if (input.Count == 1 && input[0].Length == 1)
-        {
-            Console.WriteLine("Number of matching Morse words: 1");
-            return;
-        }
-
-        int matchingCount = CountMatchingMorseWords(input);
-        Console.WriteLine("Number of matching Morse words: " + matchingCount);
+        Console.WriteLine("Количество уникальных слов: " + uniqueMorseWords.Count);
     }
 }

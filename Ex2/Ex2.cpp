@@ -1,75 +1,74 @@
 #include <iostream>
-#include <vector>
-#include <string>
-#include <unordered_set>
 #include <algorithm>
-
+#include <vector>
+#include <set>
+#include <map>
+#include <sstream>
 using namespace std;
 
 vector<string> morseAlphabet = {
-        ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..",
-        "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
+    ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---",
+    ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
 };
 
-string toMorseCode(const string& word) {
-    string morseWord = "";
+// map который будет хранить соответствие между символами и их представлением в коде Морзе.
+map<char, string> charToMorse;
 
-    for (char c : word) {
-        int index = c - 'a';
-        morseWord += morseAlphabet[index];
+void initCharToMorseMap() {
+    for (char c = 'a'; c <= 'z'; ++c) {
+        charToMorse[c] = morseAlphabet[c - 'a'];
     }
-
-    return morseWord;
 }
 
-bool compareMorseWords(const string& word1, const string& word2) {
-    if (word1.size() != word2.size()) {
-        return false;
-    }
-
-    string sortedWord1 = word1;
-    sort(sortedWord1.begin(), sortedWord1.end());
-
-    string sortedWord2 = word2;
-    sort(sortedWord2.begin(), sortedWord2.end());
-
-    return sortedWord1 == sortedWord2;
-}
-
-int countMatchingMorseWords(const vector<string>& words) {
-    int count = 0;
-
-    vector<string> morseWords;
-    for (const string& word : words) {
-        morseWords.push_back(toMorseCode(word));
-    }
-
-    for (int i = 0; i < morseWords.size(); ++i) {
-        for (int j = i + 1; j < morseWords.size(); ++j) {
-            if (compareMorseWords(morseWords[i], morseWords[j])) {
-                count++;
-            }
+// Функция генерирует перестановки переданной строки и добавляет их в контейнер.
+void generatePermutations(string str, int l, int r, set<string>& permutations) {
+    if (l == r) {
+        permutations.insert(str);
+    } else {
+        for (int i = l; i <= r; i++) {
+            swap(str[l], str[i]);
+            generatePermutations(str, l + 1, r, permutations);
+            swap(str[l], str[i]);
         }
     }
+}
 
-    return count;
+// Преобразую строку в код Морзе, используя созданный map.
+string stringToMorse(const string& str) {
+    string morseString = "";
+    for (char c : str) {
+        morseString += charToMorse[c];
+    }
+    return morseString;
 }
 
 int main() {
-    int n;
-    cout << "Enter the number of words: ";
-    cin >> n;
+    int count = 0;
+    initCharToMorseMap();
+    setlocale(LC_ALL, "Russian");
+    string input;
+    cout << "Введите слова для перестановки (разделяйте их пробелами): ";
+    getline(cin, input);
 
-    vector<string> input;
-    cout << "Enter the words: ";
-    for (int i = 0; i < n; ++i) {
-        string word;
-        cin >> word;
-        input.push_back(word);
+    // Разделяем ввод на отдельные слова.
+    stringstream ss(input);
+    string word;
+    set<string> uniqueMorseWords;
+
+    while (ss >> word) {
+        set<string> permutations;
+        generatePermutations(word, 0, word.size() - 1, permutations);
+
+        for (const auto& permutation : permutations) {
+            uniqueMorseWords.insert(stringToMorse(permutation));
+        }
     }
 
-    int matchingCount = countMatchingMorseWords(input);
-    cout << "Number of matching Morse words: " << matchingCount << endl;
-
+    cout << "Уникальные слова в языке Морзе: ";
+    for (const auto& morseWord : uniqueMorseWords) {
+        count++;
+        cout << morseWord << endl;
+    }
+     cout << "Количество уникальных слов: " << count << endl;
     return 0;
 }

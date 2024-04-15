@@ -1,72 +1,75 @@
-fn to_morse_code(word: &str) -> String {
-    let morse_alphabet = vec![
-        ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..",
-        "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
+use std::collections::HashMap;
+use std::collections::HashSet;
+use std::io::{self, Write};
+
+fn init_char_to_morse_map() -> HashMap<char, &'static str> {
+    let morse_alphabet = [
+        ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---",
+        ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
     ];
 
-    let mut morse_word = String::new();
-
-    for c in word.chars() {
-        let index = c as usize - 'a' as usize;
-        morse_word.push_str(&morse_alphabet[index]);
+    let mut char_to_morse = HashMap::new();
+    for (i, code) in morse_alphabet.iter().enumerate() {
+        char_to_morse.insert((i as u8 + b'a') as char, *code);
     }
-
-    morse_word
+    char_to_morse
 }
 
-fn compare_morse_words(word1: &str, word2: &str) -> bool {
-    if word1.len() != word2.len() {
-        return false;
-    }
+fn generate_permutations(str: &str) -> HashSet<String> {
+    let mut permutations = HashSet::new();
+    let mut chars: Vec<char> = str.chars().collect();
+    let len = chars.len();
+    let mut indices = vec![0; len];
+    let mut i = 0;
 
-    let mut sorted_word1: Vec<char> = word1.chars().collect();
-    sorted_word1.sort();
-
-    let mut sorted_word2: Vec<char> = word2.chars().collect();
-    sorted_word2.sort();
-
-    sorted_word1 == sorted_word2
-}
-
-fn count_matching_morse_words(words: &Vec<String>) -> i32 {
-    let mut count = 0;
-
-    let mut morse_words: Vec<String> = Vec::new();
-    for word in words {
-        morse_words.push(to_morse_code(word));
-    }
-
-    for i in 0..morse_words.len() {
-        for j in (i + 1)..morse_words.len() {
-            if compare_morse_words(&morse_words[i], &morse_words[j]) {
-                count += 1;
+    permutations.insert(str.to_string());
+    while i < len {
+        if indices[i] < i {
+            if i % 2 == 0 {
+                chars.swap(0, i);
+            } else {
+                chars.swap(indices[i], i);
             }
+            permutations.insert(chars.iter().collect::<String>());
+            indices[i] += 1;
+            i = 0;
+        } else {
+            indices[i] = 0;
+            i += 1;
         }
     }
+    permutations
+}
 
-    count
+fn string_to_morse(str: &str, char_to_morse: &HashMap<char, &str>) -> String {
+    let mut morse_string = String::new();
+    for c in str.chars() {
+        morse_string.push_str(char_to_morse.get(&c).unwrap_or(&""));
+    }
+    morse_string
 }
 
 fn main() {
-    let mut input = Vec::new();
+    let char_to_morse = init_char_to_morse_map();
+    let mut input = String::new();
+    println!("Введите слова для перестановки (разделяйте их пробелами): ");
+    io::stdout().flush().unwrap();
+    io::stdin().read_line(&mut input).unwrap();
 
-    println!("Enter the number of words: ");
-    let mut n = String::new();
-    std::io::stdin().read_line(&mut n).unwrap();
-    let n: usize = n.trim().parse().unwrap();
+    let words = input.trim().split_whitespace();
+    let mut unique_morse_words = HashSet::new();
 
-    println!("Enter the words: ");
-    for _ in 0..n {
-        let mut word = String::new();
-        std::io::stdin().read_line(&mut word).unwrap();
-        input.push(word.trim().to_string());
+    for word in words {
+        let permutations = generate_permutations(word);
+        for permutation in permutations {
+            unique_morse_words.insert(string_to_morse(&permutation, &char_to_morse));
+        }
     }
 
-    if input.len() == 1 && input[0].len() == 1 {
-        println!("Number of matching Morse words: 1");
-        return;
+    println!("Уникальные слова в языке Морзе:");
+    for morse_word in &unique_morse_words {
+        println!("{}", morse_word);
     }
 
-    let matching_count = count_matching_morse_words(&input);
-    println!("Number of matching Morse words: {}", matching_count);
+    println!("Количество уникальных слов: {}", unique_morse_words.len());
 }

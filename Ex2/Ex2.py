@@ -1,52 +1,44 @@
+import itertools
+
 morse_alphabet = [
-    ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..",
-    "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
+    ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---",
+    ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
 ]
 
+# dict для хранения соответствия между символами и их представлением в коде Морзе.
+char_to_morse = {}
 
-def to_morse_code(word):
-    morse_word = ""
+def init_char_to_morse_map():
+    for i, code in enumerate(morse_alphabet):
+        char_to_morse[chr(ord('a') + i)] = code
 
-    for c in word:
-        index = ord(c) - ord('a')
-        morse_word += morse_alphabet[index]
+# Функция генерирует перестановки переданной строки и добавляет их в контейнер.
+def generate_permutations(str):
+    return set(''.join(p) for p in itertools.permutations(str))
 
-    return morse_word
+# Преобразую строку в код Морзе, используя созданный dict.
+def string_to_morse(str):
+    return ''.join(char_to_morse[c] for c in str)
 
+def main():
+    init_char_to_morse_map()
+    input_str = input("Введите слова для перестановки (разделяйте их пробелами): ")
 
-def compare_morse_words(word1, word2):
-    if len(word1) != len(word2):
-        return False
+    # Разделяем ввод на отдельные слова.
+    words = input_str.split()
+    unique_morse_words = set()
 
-    sorted_word1 = ''.join(sorted(word1))
-    sorted_word2 = ''.join(sorted(word2))
+    for word in words:
+        permutations = generate_permutations(word)
 
-    return sorted_word1 == sorted_word2
+        for permutation in permutations:
+            unique_morse_words.add(string_to_morse(permutation))
 
+    print("Уникальные слова в языке Морзе:")
+    for morse_word in unique_morse_words:
+        print(morse_word)
 
-def count_matching_morse_words(words):
-    count = 0
-    morse_words = [to_morse_code(word) for word in words]
-
-    for i in range(len(morse_words)):
-        for j in range(i + 1, len(morse_words)):
-            if compare_morse_words(morse_words[i], morse_words[j]):
-                count += 1
-
-    return count
-
+    print("Количество уникальных слов:", len(unique_morse_words))
 
 if __name__ == "__main__":
-    n = int(input("Enter the number of words: "))
-
-    input_words = []
-    print("Enter the words:")
-    for _ in range(n):
-        word = input()
-        input_words.append(word)
-
-    if len(input_words) == 1 and len(input_words[0]) == 1:
-        print("Number of matching Morse words: 1")
-    else:
-        matching_count = count_matching_morse_words(input_words)
-        print(f"Number of matching Morse words: {matching_count}")
+    main()

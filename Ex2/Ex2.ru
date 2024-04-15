@@ -1,53 +1,46 @@
-morse_alphabet = [
-  ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..",
-  "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
-]
-
-def to_morse_code(word, morse_alphabet)
-  morse_word = ""
-  word.each_char do |c|
-    index = c.ord - 'a'.ord
-    morse_word += morse_alphabet[index]
+def init_char_to_morse_map(morse_alphabet)
+  @char_to_morse = {}
+  ('a'..'z').each_with_index do |c, index|
+    @char_to_morse[c] = morse_alphabet[index]
   end
-  morse_word
 end
 
-def compare_morse_words(word1, word2)
-  return false if word1.length != word2.length
-
-  sorted_word1 = word1.chars.sort.join
-  sorted_word2 = word2.chars.sort.join
-
-  sorted_word1 == sorted_word2
+# Функция генерирует перестановки переданной строки и добавляет их в контейнер.
+def generate_permutations(str)
+  str.chars.permutation.to_a.map(&:join).uniq
 end
 
-def count_matching_morse_words(words, morse_alphabet)
-  count = 0
+# Преобразую строку в код Морзе, используя созданный hash.
+def string_to_morse(str)
+  str.chars.map { |c| @char_to_morse[c] }.join
+end
 
-  morse_words = words.map { |word| to_morse_code(word, morse_alphabet) }
+def main
+  morse_alphabet = [
+    ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---",
+    ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
+  ]
+  init_char_to_morse_map(morse_alphabet)
+  puts "Введите слова для перестановки (разделяйте их пробелами): "
+  input = gets.chomp
 
-  morse_words.each_with_index do |word1, i|
-    ((i + 1)...morse_words.length).each do |j|
-      count += 1 if compare_morse_words(word1, morse_words[j])
+  # Разделяем ввод на отдельные слова.
+  words = input.split
+  unique_morse_words = []
+
+  words.each do |word|
+    permutations = generate_permutations(word)
+
+    permutations.each do |permutation|
+      morse_word = string_to_morse(permutation)
+      unique_morse_words << morse_word unless unique_morse_words.include?(morse_word)
     end
   end
 
-  count
+  puts "Уникальные слова в языке Морзе:"
+  unique_morse_words.each { |morse_word| puts morse_word }
+
+  puts "Количество уникальных слов: #{unique_morse_words.size}"
 end
 
-puts "Enter the number of words: "
-n = gets.chomp.to_i
-
-input = []
-puts "Enter the words: "
-n.times do
-  word = gets.chomp
-  input << word
-end
-
-if input.length == 1 && input[0].length == 1
-  puts "Number of matching Morse words: 1"
-else
-  matching_count = count_matching_morse_words(input, morse_alphabet)
-  puts "Number of matching Morse words: #{matching_count}"
-end
+main

@@ -1,80 +1,71 @@
-package Ex2;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Ex2 {
     static List<String> morseAlphabet = Arrays.asList(
-            ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..",
-            "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
+            ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---",
+            ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
     );
 
-    public static String toMorseCode(String word) {
-        StringBuilder morseWord = new StringBuilder();
+    static Map<Character, String> charToMorse = new HashMap<>();
 
-        for (char c : word.toCharArray()) {
-            int index = c - 'a';
-            morseWord.append(morseAlphabet.get(index));
+    static void initCharToMorseMap() {
+        for (char c = 'a'; c <= 'z'; ++c) {
+            charToMorse.put(c, morseAlphabet.get(c - 'a'));
         }
-
-        return morseWord.toString();
     }
 
-    public static boolean compareMorseWords(String word1, String word2) {
-        if (word1.length() != word2.length()) {
-            return false;
-        }
-
-        char[] sortedWord1 = word1.toCharArray();
-        Arrays.sort(sortedWord1);
-
-        char[] sortedWord2 = word2.toCharArray();
-        Arrays.sort(sortedWord2);
-
-        return Arrays.equals(sortedWord1, sortedWord2);
-    }
-
-    public static int countMatchingMorseWords(List<String> words) {
-        int count = 0;
-
-        List<String> morseWords = new ArrayList<>();
-        for (String word : words) {
-            morseWords.add(toMorseCode(word));
-        }
-
-        for (int i = 0; i < morseWords.size(); ++i) {
-            for (int j = i + 1; j < morseWords.size(); ++j) {
-                if (compareMorseWords(morseWords.get(i), morseWords.get(j))) {
-                    count++;
-                }
+    static void generatePermutations(String str, int l, int r, Set<String> permutations) {
+        if (l == r) {
+            permutations.add(str);
+        } else {
+            for (int i = l; i <= r; i++) {
+                str = swap(str, l, i);
+                generatePermutations(str, l + 1, r, permutations);
+                str = swap(str, l, i);
             }
         }
+    }
 
-        return count;
+    static String swap(String str, int i, int j) {
+        char[] charArray = str.toCharArray();
+        char temp = charArray[i];
+        charArray[i] = charArray[j];
+        charArray[j] = temp;
+        return new String(charArray);
+    }
+
+    static String stringToMorse(String str) {
+        StringBuilder morseString = new StringBuilder();
+        for (char c : str.toCharArray()) {
+            morseString.append(charToMorse.get(c));
+        }
+        return morseString.toString();
     }
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        initCharToMorseMap();
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.println("Введите слова для перестановки (разделяйте их пробелами): ");
+            String input = scanner.nextLine();
 
-        System.out.print("Enter the number of words: ");
-        int n = scanner.nextInt();
-        scanner.nextLine();
+            String[] words = input.split(" ");
+            Set<String> uniqueMorseWords = new HashSet<>();
 
-        List<String> input = new ArrayList<>();
-        System.out.print("Enter the words: ");
-        for (int i = 0; i < n; ++i) {
-            String word = scanner.nextLine();
-            input.add(word);
+            for (String word : words) {
+                Set<String> permutations = new HashSet<>();
+                generatePermutations(word, 0, word.length() - 1, permutations);
+
+                for (String permutation : permutations) {
+                    uniqueMorseWords.add(stringToMorse(permutation));
+                }
+            }
+
+            System.out.println("Уникальные слова в языке Морзе: ");
+            for (String morseWord : uniqueMorseWords) {
+                System.out.println(morseWord);
+            }
+
+            System.out.println("Количество уникальных слов: " + uniqueMorseWords.size());
         }
-
-        if (input.size() == 1 && input.get(0).length() == 1) {
-            System.out.println("Number of matching Morse words: 1");
-            return;
-        }
-
-        int matchingCount = countMatchingMorseWords(input);
-        System.out.println("Number of matching Morse words: " + matchingCount);
     }
 }

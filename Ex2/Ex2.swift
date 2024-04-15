@@ -1,75 +1,69 @@
 import Foundation
 
-let morseAlphabet = [
-    ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..",
-    "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
+let morseAlphabet: [String] = [
+    ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---",
+    ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
 ]
 
-func toMorseCode(word: String) -> String {
-    var morseWord = ""
+// Dictionary to store the mapping between characters and their Morse code representation.
+var charToMorse: [Character: String] = [:]
 
-    for c in word {
-        let index = Int(c.asciiValue! - Character("a").asciiValue!)
-        morseWord += morseAlphabet[index]
-    }
-
-    return morseWord
-}
-
-func compareMorseWords(word1: String, word2: String) -> Bool {
-    if word1.count != word2.count {
-        return false
-    }
-
-    let sortedWord1 = String(word1.sorted())
-    let sortedWord2 = String(word2.sorted())
-
-    return sortedWord1 == sortedWord2
-}
-
-func countMatchingMorseWords(words: [String]) -> Int {
-    var count = 0
-
-    var morseWords: [String] = []
-    for word in words {
-        morseWords.append(toMorseCode(word: word))
-    }
-
-    for i in 0..<morseWords.count {
-        for j in (i + 1)..<morseWords.count {
-            if compareMorseWords(word1: morseWords[i], word2: morseWords[j]) {
-                count += 1
-            }
+func initCharToMorseMap() {
+    for i in 0..<morseAlphabet.count {
+        if let scalar = Unicode.Scalar("a".unicodeScalars.first!.value + UInt32(i)) {
+            charToMorse[Character(scalar)] = morseAlphabet[i]
         }
     }
+}
 
-    return count
+// Function to generate permutations of the given string and add them to the container.
+func generatePermutations(str: String, l: Int, r: Int, permutations: inout Set<String>) {
+    var strArray = Array(str)
+    if l == r {
+        permutations.insert(String(strArray))
+    } else {
+        for i in l...r {
+            strArray.swapAt(l, i)
+            generatePermutations(str: String(strArray), l: l + 1, r: r, permutations: &permutations)
+            strArray.swapAt(l, i)
+        }
+    }
+}
+
+// Function to convert a string to Morse code using the created map.
+func stringToMorse(str: String) -> String {
+    var morseString = ""
+    for c in str {
+        morseString += (charToMorse[c] ?? "")
+    }
+    return morseString
 }
 
 func main() {
-    print("Enter the number of words: ")
-    guard let n = readLine()?.components(separatedBy: " ").first, let numberOfWords = Int(n) else {
-        print("Invalid input")
-        return
-    }
+    initCharToMorseMap()
+    print("Введите слова для перестановки (разделяйте их пробелами): ")
+    if let line = readLine() {
+        let words = line.components(separatedBy: " ")
+        var uniqueMorseWords: Set<String> = []
 
-    var input: [String] = []
-    print("Enter the words: ")
-    for _ in 0..<numberOfWords {
-        guard let word = readLine() else {
-            print("Invalid input")
-            return
+        for word in words {
+            var permutations: Set<String> = []
+            generatePermutations(str: word, l: 0, r: word.count - 1, permutations: &permutations)
+
+            for permutation in permutations {
+                uniqueMorseWords.insert(stringToMorse(str: permutation))
+            }
         }
-        input.append(word)
-    }
 
-    if input.count == 1 && input[0].count == 1 {
-        print("Number of matching Morse words: 1")
-        return
-    }
+        print("Уникальные слова в языке Морзе: ")
+        for morseWord in uniqueMorseWords {
+            print(morseWord)
+        }
 
-    let matchingCount = countMatchingMorseWords(words: input)
-    print("Number of matching Morse words: \(matchingCount)")
+        print("Количество уникальных слов: \(uniqueMorseWords.count)")
+    } else {
+        print("Invalid input")
+    }
 }
 
 main()

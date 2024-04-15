@@ -3,6 +3,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "MorseCodePermutations",
+      "request": "launch",
+      "mainClass": "Ex2.MorseCodePermutations",
+      "projectName": "Lab2_1b1c6c00"
+    },
+    {
+      "type": "java",
       "name": "Ex3",
       "request": "launch",
       "mainClass": "Ex3.Ex3",

@@ -1,71 +1,70 @@
 const morseAlphabet = [
-    ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..",
-    "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
+    ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---",
+    ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
 ];
 
-function toMorseCode(word) {
-    let morseWord = "";
+// Map to store the correspondence between characters and their Morse representation.
+const charToMorse = new Map();
 
-    for (let i = 0; i < word.length; i++) {
-        let index = word.charCodeAt(i) - 'a'.charCodeAt(0);
-        morseWord += morseAlphabet[index];
+function initCharToMorseMap() {
+    for (let i = 0; i < 26; ++i) {
+        charToMorse.set(String.fromCharCode(97 + i), morseAlphabet[i]);
     }
-
-    return morseWord;
 }
 
-function compareMorseWords(word1, word2) {
-    if (word1.length !== word2.length) {
-        return false;
-    }
-
-    let sortedWord1 = word1.split('').sort().join('');
-    let sortedWord2 = word2.split('').sort().join('');
-
-    return sortedWord1 === sortedWord2;
-}
-
-function countMatchingMorseWords(words) {
-    let count = 0;
-
-    let morseWords = [];
-    for (let word of words) {
-        morseWords.push(toMorseCode(word));
-    }
-
-    for (let i = 0; i < morseWords.length; i++) {
-        for (let j = i + 1; j < morseWords.length; j++) {
-            if (compareMorseWords(morseWords[i], morseWords[j])) {
-                count++;
-            }
+// Function to generate permutations of the given string and add them to the container.
+function generatePermutations(str, l, r, permutations) {
+    if (l === r) {
+        permutations.add(str);
+    } else {
+        for (let i = l; i <= r; i++) {
+            str = swap(str, l, i);
+            generatePermutations(str, l + 1, r, permutations);
+            str = swap(str, l, i);
         }
     }
+}
 
-    return count;
+function swap(str, i, j) {
+    let charArray = str.split('');
+    let temp = charArray[i];
+    charArray[i] = charArray[j];
+    charArray[j] = temp;
+    return charArray.join('');
+}
+
+// Function to convert a string to Morse code using the created map.
+function stringToMorse(str) {
+    let morseString = "";
+    for (let i = 0; i < str.length; i++) {
+        morseString += charToMorse.get(str[i]);
+    }
+    return morseString;
 }
 
 function main() {
-    const readline = require('readline').createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
+    initCharToMorseMap();
+    let input = prompt("Enter words to permute (separate them with spaces): ");
 
-    readline.question("Enter the number of words: ", (n) => {
-        let input = [];
-        console.log("Enter the words: ");
-        readline.on('line', (word) => {
-            input.push(word);
-            if (input.length == n) {
-                readline.close();
-                if (input.length === 1 && input[0].length === 1) {
-                    console.log("Number of matching Morse words: 1");
-                    return;
-                }
-                let matchingCount = countMatchingMorseWords(input);
-                console.log("Number of matching Morse words: " + matchingCount);
-            }
-        });
-    });
+    // Split the input into separate words.
+    let words = input.split(' ');
+    let uniqueMorseWords = new Set();
+
+    for (let word of words) {
+        let permutations = new Set();
+        generatePermutations(word, 0, word.length - 1, permutations);
+
+        for (let permutation of permutations) {
+            uniqueMorseWords.add(stringToMorse(permutation));
+        }
+    }
+
+    console.log("Unique words in Morse code:");
+    for (let morseWord of uniqueMorseWords) {
+        console.log(morseWord);
+    }
+
+    console.log("Number of unique words: " + uniqueMorseWords.size);
 }
 
 main();

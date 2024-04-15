@@ -1,82 +1,75 @@
-package awesomeProject1
+package main
 
 import (
-    "fmt"
-    "sort"
-    "strings"
+	"bufio"
+	"fmt"
+	"os"
+	"strings"
 )
 
 var morseAlphabet = []string{
-    ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..",
-    "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--..",
+	".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---",
+	".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--..",
 }
 
-func toMorseCode(word string) string {
-    var morseWord string
-    for _, c := range word {
-       index := c - 'a'
-       morseWord += morseAlphabet[index]
-    }
-    return morseWord
+// map для хранения соответствия между символами и их представлением в коде Морзе.
+var charToMorse map[rune]string
+
+func initCharToMorseMap() {
+	charToMorse = make(map[rune]string)
+	for i, code := range morseAlphabet {
+		charToMorse[rune('a'+i)] = code
+	}
 }
 
-func compareMorseWords(word1, word2 string) bool {
-    if len(word1) != len(word2) {
-       return false
-    }
-
-    sortedWord1 := strings.Split(word1, "")
-    sort.Strings(sortedWord1)
-
-    sortedWord2 := strings.Split(word2, "")
-    sort.Strings(sortedWord2)
-
-    for i := range sortedWord1 {
-       if sortedWord1[i] != sortedWord2[i] {
-          return false
-       }
-    }
-
-    return true
+// Функция генерирует перестановки переданной строки и добавляет их в контейнер.
+func generatePermutations(str []rune, l, r int, permutations map[string]bool) {
+	if l == r {
+		permutations[string(str)] = true
+	} else {
+		for i := l; i <= r; i++ {
+			str[l], str[i] = str[i], str[l]
+			generatePermutations(str, l+1, r, permutations)
+			str[l], str[i] = str[i], str[l]
+		}
+	}
 }
 
-func countMatchingMorseWords(words []string) int {
-    count := 0
-
-    var morseWords []string
-    for _, word := range words {
-       morseWords = append(morseWords, toMorseCode(word))
-    }
-
-    for i := 0; i < len(morseWords); i++ {
-       for j := i + 1; j < len(morseWords); j++ {
-          if compareMorseWords(morseWords[i], morseWords[j]) {
-             count++
-          }
-       }
-    }
-
-    return count
+// Преобразую строку в код Морзе, используя созданный map.
+func stringToMorse(str string) string {
+	var morseString strings.Builder
+	for _, c := range str {
+		morseString.WriteString(charToMorse[c])
+	}
+	return morseString.String()
 }
 
 func main() {
-    var n int
-    fmt.Print("Enter the number of words: ")
-    fmt.Scan(&n)
+	initCharToMorseMap()
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Введите слова для перестановки (разделяйте их пробелами): ")
+	input, _ := reader.ReadString('\n')
+	input = strings.TrimSpace(input)
 
-    var input []string
-    fmt.Print("Enter the words: ")
-    for i := 0; i < n; i++ {
-       var word string
-       fmt.Scan(&word)
-       input = append(input, word)
-    }
+	// Разделяем ввод на отдельные слова.
+	words := strings.Split(input, " ")
+	uniqueMorseWords := make(map[string]bool)
 
-    if len(input) == 1 && len(input[0]) == 1 {
-       fmt.Println("Number of matching Morse words: 1")
-       return
-    }
+	for _, word := range words {
+		permutations := make(map[string]bool)
+		wordRunes := []rune(word)
+		generatePermutations(wordRunes, 0, len(wordRunes)-1, permutations)
 
-    matchingCount := countMatchingMorseWords(input)
-    fmt.Println("Number of matching Morse words:", matchingCount)
+		for permutation := range permutations {
+			uniqueMorseWords[stringToMorse(permutation)] = true
+		}
+	}
+
+	fmt.Println("Уникальные слова в языке Морзе:")
+	count := 0
+	for morseWord := range uniqueMorseWords {
+		count++
+		fmt.Println(morseWord)
+	}
+	fmt.Println("Количество уникальных слов:", count)
 }
